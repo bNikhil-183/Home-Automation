@@ -1,64 +1,56 @@
-# Smart Environment Monitoring System 
-This Arduino-based project monitors environmental conditions like **smoke**, **light**, and **temperature**, and takes automatic actions based on the readings:
+# Smart Environment Monitoring System
 
-- Triggers an alarm if smoke is detected.
+This Arduino project continuously monitors smoke, light, and temperature using analog sensors and triggers appropriate actions:
+
+- Activates a buzzer and motor (via relay) if smoke is detected.
 - Adjusts LED brightness based on ambient light using an LDR.
-- Controls fan speed based on temperature using a temperature sensor.
+- Controls fan speed based on temperature using an LM35 temperature sensor.
 
 ---
 
-## Hardware Components
+## Hardware Required
 
-| Component            | Quantity | Notes                     |
-|---------------------|----------|---------------------------|
-| Arduino Uno / Nano  | 1        |                           |
-| Smoke Sensor (MQ-2) | 1        | Connected to A1           |
-| LDR                 | 1        | Connected to A0           |
-| Temperature Sensor (LM35) | 1  | Connected to A2           |
-| LED                 | 1        | Connected to Pin 9 (PWM)  |
-| Buzzer / Alarm      | 1        | Connected to Pin 2        |
-| Fan (DC or PWM)     | 1        | Connected to Pin 11 (PWM) |
-| Resistors           | 2        | For LDR voltage divider   |
-| Breadboard + Wires  | As needed|                           |
-
----
-
-## Circuit Connections
-
-| Arduino Pin | Component         |
-|-------------|------------------|
-| A0          | LDR (via voltage divider)  |
-| A1          | Smoke sensor (Analog output) |
-| A2          | LM35 temperature sensor     |
-| D2          | Buzzer / Alarm (Digital)    |
-| D9 (PWM)    | LED                         |
-| D11 (PWM)   | Fan                         |
-| GND & 5V    | Shared among all components |
-
-> **Tip:** Use `map()` to calibrate LDR, temperature, and fan speed values correctly based on actual readings.
+| Component                | Quantity | Description                       |
+|--------------------------|----------|-----------------------------------|
+| Arduino Uno/Nano         | 1        | Main controller                   |
+| MQ-2 Smoke Sensor        | 1        | Smoke/gas sensor (Analog out)     |
+| LDR                      | 1        | Light sensor                      |
+| LM35 Temperature Sensor  | 1        | Analog temperature sensor         |
+| Relay Module             | 1        | To control motor (NO pin)         |
+| DC Motor or Load         | 1        | Controlled via relay              |
+| LED                      | 1        | Controlled brightness             |
+| Buzzer / Alarm           | 1        | Indicates smoke alert             |
+| Fan                      | 1        | PWM-controlled via MOSFET/driver  |
+| Resistors                | 2        | For LDR voltage divider           |
+| Breadboard & Jumper Wires| As needed| Circuit connections               |
 
 ---
 
-## 🧠 Features & Logic
+## Circuit Diagram
 
-###Smoke Detection
-- Reads analog value from MQ-2 sensor.
-- Normalizes it based on sensor range.
-- Triggers alarm if value exceeds threshold (`0.17` by default).
-
-### Light-Responsive LED
-- Uses LDR to measure light intensity.
-- LED gets **brighter in the dark** and **dim in bright light**.
-
-### 🌡️ Temperature-Based Fan
-- LM35 sensor provides analog voltage (10mV per °C).
-- Temperature is calculated and mapped to control fan speed (PWM).
+A Fritzing or hand-drawn wiring diagram is recommended here (e.g., `circuit_diagram.png`).
 
 ---
 
-## Serial Monitor Output
+## Logic Summary
 
-Example Output:
-Smoke Level: 0.12
-LDR Value: 648
-Temperature (°C): 28.43
+### Smoke Detection
+- Uses MQ-2 analog output.
+- Normalized and compared to `SMOKE_THRESHOLD`.
+- Triggers buzzer and turns on motor via relay when threshold is exceeded.
+
+### LDR and LED
+- LED brightness is inversely mapped from LDR input.
+- Brighter in dark, dimmer in light.
+
+### Temperature & Fan
+- LM35 provides analog voltage: 10 mV/°C.
+- Fan speed is mapped to temperature reading using PWM.
+
+---
+
+## Sample Serial Output
+
+Smoke Level: 0.21
+LDR Value: 683
+Temperature (°C): 28.54
