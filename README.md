@@ -28,7 +28,7 @@ This Arduino project continuously monitors smoke, light, and temperature using a
 
 ## Circuit Diagram
 
-A Fritzing or hand-drawn wiring diagram is recommended here (e.g., `circuit_diagram.png`).
+<img width="737" alt="circuit" src="https://github.com/user-attachments/assets/94c90620-bc46-49c0-926d-595144171174" />
 
 ---
 
