@@ -1,77 +1,79 @@
 /*
   Smart Environment Monitoring System
   ------------------------------------
-  Features:
-  - Smoke detection with alarm
-  - Light-dependent LED brightness control
-  - Temperature-based fan speed control
+  Monitors environmental parameters and responds accordingly:
+  - Smoke detection: activates alarm and relay (motor)
+  - Light intensity: controls LED brightness based on ambient light
+  - Temperature: adjusts fan speed based on heat
 
-  Hardware Connections:
-  - Smoke Sensor      -> A1
-  - LDR               -> A0
-  - Temperature Sensor-> A2
-  - Alarm             -> Pin 2
-  - LED               -> Pin 9 (PWM)
-  - Fan               -> Pin 11 (PWM)
+  Author: [Your Name]
+  License: MIT
 */
 
 // --- Pin Definitions ---
-const int smokeSensorPin = A1;
-const int ldrPin         = A0;
-const int tempSensorPin  = A2;
-const int alarmPin       = 2;
-const int ledPin         = 9;
-const int fanPin         = 11;
+const int smokeSensorPin = A1;   // MQ-2 smoke sensor analog output
+const int ldrPin         = A0;   // LDR sensor analog input
+const int tempSensorPin  = A2;   // LM35 temperature sensor
+const int alarmPin       = 2;    // Buzzer / Alarm
+const int ledPin         = 9;    // LED controlled via PWM
+const int fanPin         = 11;   // Fan controlled via PWM
+const int relayPin       = 4;    // Relay module controlling motor
 
-// --- Smoke Sensor Calibration Constants ---
+// --- Smoke Sensor Threshold Configuration ---
 const float SMOKE_SENSOR_LOW   = 320.0;
 const float SMOKE_SENSOR_HIGH  = 760.0;
 const float SMOKE_SENSOR_DIFF  = SMOKE_SENSOR_HIGH - SMOKE_SENSOR_LOW;
-const float SMOKE_THRESHOLD    = 0.17; // Normalized threshold value
+const float SMOKE_THRESHOLD    = 0.17; // Normalized threshold for alarm
+
+// --- Global Variables ---
+float gasRead;
 
 void setup() {
-  // Initialize Serial Monitor
+  // Initialize serial communication
   Serial.begin(9600);
 
   // Set pin modes
   pinMode(ledPin, OUTPUT);
   pinMode(fanPin, OUTPUT);
   pinMode(alarmPin, OUTPUT);
+  pinMode(relayPin, OUTPUT);
 }
 
 void loop() {
-  // --- Smoke Sensor Reading ---
-  float gasRead = analogRead(smokeSensorPin); // Raw analog value
-  float smokeLevel = (gasRead - SMOKE_SENSOR_LOW) / SMOKE_SENSOR_DIFF; // Normalize
+  // --- Smoke Sensor Logic ---
+  gasRead = analogRead(smokeSensorPin);
+  float smokeLevel = (gasRead - SMOKE_SENSOR_LOW) / SMOKE_SENSOR_DIFF;
 
-  // Control Alarm based on smoke level
+  // If smoke exceeds threshold, activate alarm and relay
   if (smokeLevel < SMOKE_THRESHOLD) {
-    digitalWrite(alarmPin, LOW);  // No smoke detected
+    digitalWrite(alarmPin, LOW);       // Alarm off
+    digitalWrite(relayPin, LOW);       // Motor off
   } else {
-    digitalWrite(alarmPin, HIGH); // Smoke detected - activate alarm
+    digitalWrite(alarmPin, HIGH);      // Alarm on
+    digitalWrite(relayPin, HIGH);      // Motor on
   }
 
   Serial.print("Smoke Level: ");
   Serial.println(smokeLevel);
 
-  // --- LDR and LED Brightness Control ---
-  int ldrValue = analogRead(ldrPin); // Read LDR value
-  int ledBrightness = map(ldrValue, 0, 1023, 255, 0); // Darker = brighter LED
-  analogWrite(ledPin, ledBrightness); // Adjust LED brightness
+  // --- Light Intensity Control (LDR + LED) ---
+  int ldrValue = analogRead(ldrPin);
+  int ledBrightness = map(ldrValue, 0, 1023, 255, 0); // Darker = brighter
+  analogWrite(ledPin, ledBrightness);
 
   Serial.print("LDR Value: ");
   Serial.println(ldrValue);
 
-  // --- Temperature Sensor and Fan Speed Control ---
-  int tempRead = analogRead(tempSensorPin); // Read temperature sensor
-  float voltage = tempRead * (5.0 / 1023.0); // Convert to voltage
-  float temperatureC = (voltage - 0.5) * 100.0; // Convert to Celsius
+  // --- Temperature Monitoring and Fan Control ---
+  int tempRead = analogRead(tempSensorPin);
+  float voltage = tempRead * (5.0 / 1023.0);         // Convert to voltage
+  float temperatureC = (voltage - 0.5) * 100.0;      // Convert to Celsius
+  int fanSpeed = map(tempRead, 0, 1023, 0, 255);     // Map to PWM speed
+
+  analogWrite(fanPin, fanSpeed);
 
   Serial.print("Temperature (°C): ");
   Serial.println(temperatureC);
 
-  int fanSpeed = map(tempRead, 0, 1023, 0, 255); // Map to PWM range
-  analogWrite(fanPin, fanSpeed); // Adjust fan speed
-
-  delay(1000); // Delay for sensor stability
+  delay(1000); // Delay for stability
 }
